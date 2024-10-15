@@ -1844,6 +1844,24 @@ path=$services.webjars.url('org.webjars.npm:frappe-gantt', "dist/frappe-gantt.mi
         &lt;feComposite operator="over" in="SourceGraphic"/&gt;
       &lt;/filter&gt;
 #end
+#macro (csvToArray $csvString $return)
+  ## This macro unescapes commas using backslashes, to give an option for cases when csv items contain commas.
+  #set ($regexMatches = $regextool.findAll($csvString, '(?&lt;!\\)(?:\\{2})*,'))
+  #set ($lastPosition = 0)
+  #set ($newArray = [])
+  ## Use findAll for more control over what gets matched (velocity regex doesn't support \K).
+  #foreach ($regexMatch in $regexMatches)
+    #set ($part = $csvString.substring($lastPosition, $regexMatch[0].end - 1))
+    #set ($lastPosition = $regexMatch[0].end)
+    #set ($part = $part.replaceAll('\\(\\|,)', '$1'))
+    #set ($discard = $newArray.add($part))
+  #end
+  ## Handle last element (with no ending comma).
+  #set ($part = $csvString.substring($lastPosition, $csvString.length()))
+  #set ($part = $part.replaceAll('\\(\\|,)', '$1'))
+  #set ($discard = $newArray.add($part))
+  #set ($discard = $return.put('csvReturn', $newArray))
+#end
 {{/velocity}}{{velocity}}
 #set ($mainReference = $services.model.createDocumentReference('', 'TaskManager', 'TaskManagerClass'))
 #if (!$services.licensing.licensor.hasLicensureForEntity($mainReference))
@@ -1911,22 +1929,28 @@ path=$services.webjars.url('org.webjars.npm:frappe-gantt', "dist/frappe-gantt.mi
   #if ($xcontext.macro.params.to)&lt;span&gt;&lt;b&gt;$escapetool.html($services.localization.render('taskmanager.gantt.macro.date.to'))&lt;/b&gt; ${escapetool.html($xcontext.macro.params.to)}&lt;/span&gt;#end
   #if ($xcontext.macro.params.assignees)
   &lt;p&gt;&lt;b&gt;$escapetool.html($services.localization.render('taskmanager.gantt.macro.assignees'))&lt;/b&gt;
-    #foreach ($assignee in $xcontext.macro.params.assignees.split('(?&lt;!\\),'))
+    #set ($csvReturn = {})
+    #csvToArray($xcontext.macro.params.assignees $csvReturn)
+    #foreach ($assignee in $csvReturn['csvReturn'])
       &lt;span class='xwiki-mention'&gt;$xwiki.getUserName($assignee)&lt;/span&gt;
     #end
   &lt;/p&gt;
   #end
   #if ($xcontext.macro.params.spaces)
   &lt;p&gt;&lt;b&gt;$escapetool.html($services.localization.render('taskmanager.gantt.macro.spaces'))&lt;/b&gt;
-    #foreach ($space in $xcontext.macro.params.spaces.split('(?&lt;!\\),'))
-      &lt;a class='xwiki-mention' href="$xwiki.getDocument($space, '').getURL()"&gt;$escapetool.html($space.replace('\,',','))&lt;/a&gt;
+    #set ($csvReturn = {})
+    #csvToArray($xcontext.macro.params.spaces $csvReturn)
+    #foreach ($space in $csvReturn['csvReturn'])
+      &lt;a class='xwiki-mention' href="$xwiki.getDocument($space, '').getURL()"&gt;$escapetool.html($space)&lt;/a&gt;
     #end
   &lt;/p&gt;
   #end
   #if ($xcontext.macro.params.projects)
   &lt;p&gt;&lt;b&gt;$escapetool.html($services.localization.render('taskmanager.gantt.macro.projects'))&lt;/b&gt;
-    #foreach ($project in $xcontext.macro.params.projects.split('(?&lt;!\\),'))
-      &lt;span class='xwiki-mention'&gt;$escapetool.html($project.replace('\,',','))&lt;/span&gt;
+    #set ($csvReturn = {})
+    #csvToArray($xcontext.macro.params.projects $csvReturn)
+    #foreach ($project in $csvReturn['csvReturn'])
+      &lt;span class='xwiki-mention'&gt;$escapetool.html($project)&lt;/span&gt;
     #end
   &lt;/p&gt;
   #end

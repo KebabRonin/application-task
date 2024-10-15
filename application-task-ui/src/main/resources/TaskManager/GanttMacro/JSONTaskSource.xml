@@ -46,13 +46,21 @@
 #end
 
 #macro (csvToArray $csvString $return)
-  ## This macro escapes commas using backslashes, to not break when csv items contain commas.
-  ## TODO: Also escape backslashes, as a csv item ending with one will not be interpreted correctly.
-  #set ($csv = $csvString.split('(?&lt;!\\),'))
+  ## This macro unescapes commas using backslashes, to give an option for cases when csv items contain commas.
+  #set ($regexMatches = $regextool.findAll($csvString, '(?&lt;!\\)(?:\\{2})*,'))
+  #set ($lastPosition = 0)
   #set ($newArray = [])
-  #foreach ($elem in $csv)
-    #set ($discard = $newArray.add($elem.replace('\,', ',')))
+  ## Use findAll for more control over what gets matched (velocity regex doesn't support \K).
+  #foreach ($regexMatch in $regexMatches)
+    #set ($part = $csvString.substring($lastPosition, $regexMatch[0].end - 1))
+    #set ($lastPosition = $regexMatch[0].end)
+    #set ($part = $part.replaceAll('\\(\\|,)', '$1'))
+    #set ($discard = $newArray.add($part))
   #end
+  ## Handle last element (with no ending comma).
+  #set ($part = $csvString.substring($lastPosition, $csvString.length()))
+  #set ($part = $part.replaceAll('\\(\\|,)', '$1'))
+  #set ($discard = $newArray.add($part))
   #set ($discard = $return.put('csvReturn', $newArray))
 #end
 {{/velocity}}{{velocity wiki="false"}}

@@ -29,15 +29,9 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.LocalDocumentReference;
-import org.xwiki.notifications.NotificationException;
-import org.xwiki.notifications.filters.watch.WatchedEntitiesManager;
-import org.xwiki.notifications.filters.watch.WatchedEntityFactory;
-import org.xwiki.notifications.filters.watch.WatchedLocationReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.observation.event.Event;
@@ -53,7 +47,6 @@ import com.xpn.xwiki.objects.LargeStringProperty;
 import com.xpn.xwiki.objects.PropertyInterface;
 import com.xpn.xwiki.objects.StringProperty;
 import com.xwiki.task.model.Task;
-
 /**
  * Listener which fires when adding/modifying a task in order to notify users of the changes.
  *
@@ -83,16 +76,7 @@ public class TaskChangedEventNotificationListener extends AbstractEventListener
     private Provider<XWikiContext> contextProvider;
 
     @Inject
-    private WatchedEntitiesManager watchedEntitiesManager;
-
-    @Inject
-    private WatchedEntityFactory watchedEntityFactory;
-
-    @Inject
-    private DocumentReferenceResolver<String> documentReferenceResolver;
-
-    @Inject
-    private Logger logger;
+    private Provider<TaskChangedEventPageWatcher> taskChangedEventPageWatcher;
 
     /**
      * Initialize the listener.
@@ -179,41 +163,12 @@ public class TaskChangedEventNotificationListener extends AbstractEventListener
         return Optional.of(event);
     }
 
-    private void watchTask(XWikiDocument taskDoc, String userFullName)
-    {
-        // TODO: Use custom filters to only watch for TaskChangedEvent.
-        // The watchEntity API also automatically watches the 'Pages' event source, which is unintended in this case but
-        // that's the way the API works.
-        WatchedLocationReference docRef =
-            watchedEntityFactory.createWatchedLocationReference(taskDoc.getDocumentReference());
-        if (!userFullName.equals("")) {
-            try {
-                watchedEntitiesManager.watchEntity(docRef, documentReferenceResolver.resolve(userFullName));
-            } catch (NotificationException e) {
-                logger.error("Failed to watch task page [{}] for user [{}]. Cause:", taskDoc, userFullName, e);
-            }
-        }
-    }
-
-    private void unwatchTask(XWikiDocument taskDoc, String userFullName)
-    {
-        WatchedLocationReference docRef =
-            watchedEntityFactory.createWatchedLocationReference(taskDoc.getDocumentReference());
-        if (!userFullName.equals("")) {
-            try {
-                watchedEntitiesManager.unwatchEntity(docRef, documentReferenceResolver.resolve(userFullName));
-            } catch (NotificationException e) {
-                logger.error("Failed to unwatch task page [{}] for user [{}]. Cause:", taskDoc, userFullName, e);
-            }
-        }
-    }
-
     private void notifyOfEvent(TaskChangedEvent event, XWikiDocument sourceDoc, XWikiContext context)
     {
         // Auto watch/unwatch the task page for the assignee.
         if (event.getType().equals(Task.ASSIGNEE)) {
             // Watch task page BEFORE sending event for newly assigned user.
-            watchTask(event.getDocument(), (String) event.getCurrentValue());
+            taskChangedEventPageWatcher.get().watchTask(event.getDocument(), (String) event.getCurrentValue());
         }
 
         observationManagerProvider.get().notify(event, sourceDoc.toString(), contextProvider.get());
@@ -221,7 +176,7 @@ public class TaskChangedEventNotificationListener extends AbstractEventListener
         if (event.getType().equals(Task.ASSIGNEE)) {
             // Unwatch task page AFTER sending event for newly unassigned user.
             // TODO: This doesn't work. The notification above is only received if unwatchTask is called after a delay.
-            unwatchTask(event.getDocument(), (String) event.getPreviousValue());
+            taskChangedEventPageWatcher.get().unwatchTask(event.getDocument(), (String) event.getPreviousValue());
         }
     }
 

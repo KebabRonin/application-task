@@ -190,6 +190,7 @@ public class Task
 
     /**
      * @param status the current state of the task - true: the task is completed; false: the task is not done.
+     * it's not a bool???
      */
     public void setStatus(String status)
     {

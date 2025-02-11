@@ -502,13 +502,30 @@
 #set($name ="status")
 #set($propertyClass = $object.getxWikiClass().get($name))
 #set($existingValue = $object.getValue('status'))
+## Sort the statuses by order.
+#set ($statusObjects = [])
+## Get and order XObjects.
+#foreach ($item in $services.query.xwql('from doc.object(TaskManager.StatusClass) as user').execute())
+  #set ($item = $xwiki.getDocument($item).getObjects('TaskManager.StatusClass').get(0))
+  #set ($insertIndex = 0)
+  #foreach ($status in $statusObjects)
+    #if ($status.getValue('order') &gt; $item.getValue('order'))
+      #set ($insertIndex = $foreach.count - 1)
+      #break
+    #end
+    #if ($foreach.count == $statusObjects.size())
+      #set ($insertIndex = $foreach.count)
+    #end
+  #end
+  #set ($discard = $statusObjects.add($insertIndex, $item))
+#end
 &lt;select size="1" name="TaskManager.TaskManagerClass_0_status" id="TaskManager.TaskManagerClass_0_status"&gt;
-#foreach($rValue in $propertyClass.mapValues.entrySet())
-  #set($key = "TaskManager.TaskManagerClass_status_$rValue.key")
+#foreach($status in $statusObjects)
+  #set($key = "TaskManager.TaskManagerClass_status_$status.getValue('status')")
   #set($translation = $services.localization.render($key))
-  &lt;option value="$escapetool.xml($rValue.key)" #if($existingValue == $rValue.key) selected='selected' #end&gt;
+  &lt;option value="$escapetool.xml($status.getValue('status'))" #if($existingValue == $status.getValue('status')) selected='selected' #end&gt;
     #if ($translation == $key)
-      $services.rendering.escape($rValue.key, 'xwiki/2.1')
+      $services.rendering.escape($status.getValue('status'), 'xwiki/2.1')
     #else
       $services.rendering.escape($translation, 'xwiki/2.1')
     #end
@@ -542,7 +559,7 @@
       <separators/>
       <size>1</size>
       <sort>none</sort>
-      <sql>select prop1.value, prop1.value from BaseObject as obj, StringProperty as prop1, IntegerProperty as prop2 where obj.className='TaskManager.StatusClass' and obj.id=prop1.id.id and prop1.id.name='status' and obj.id=prop2.id.id and prop2.id.name='order' order by prop2.value</sql>
+      <sql/>
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>

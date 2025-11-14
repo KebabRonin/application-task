@@ -98,7 +98,7 @@
 
 {{html clean="false" wiki="true"}}
 #if($type == 'edit')
-  #set($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.fullName not like '%Template' and doc.fullName &lt;&gt; :fullName and task.project &lt;&gt; '' order by task.duedate")
+  #set($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.space &lt;&gt; 'TaskManager.TaskManagerTemplates' and doc.fullName &lt;&gt; :fullName and task.project &lt;&gt; '' order by task.duedate")
   #set($results = $services.query.xwql($query).bindValue('fullName', $doc.fullName).execute())
   #if($results.size() != 0)
     &lt;div id="TaskManager.TaskManagerClass_dependencies"&gt;

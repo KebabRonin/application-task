@@ -57,4 +57,12 @@ class AllITs
     class NestedNotificationIT extends NotificationIT
     {
     }
+
+    @Nested
+    @Order(4)
+    @DisplayName("Task Manager Template Creation")
+    class NestedTaskTemplatesIT extends TaskTemplatesIT
+    {
+    }
+
 }

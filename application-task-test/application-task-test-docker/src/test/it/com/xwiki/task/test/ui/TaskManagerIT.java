@@ -412,6 +412,7 @@ class TaskManagerIT
     void checkboxMacro(WikiReference wiki, TestUtils setup,
         TestLocalReference testLocalReference, TestReference testReference)
     {
+        setup.setCurrentWiki(wiki.getName());
         DocumentReference testRef = new DocumentReference(docWithTaskboxes, wiki);
         setup.createPage(testRef, "{{checkbox id=\"someId\"}}Hello there{{/checkbox}}");
         ViewPageWithTasks viewPageWithTasks = new ViewPageWithTasks();

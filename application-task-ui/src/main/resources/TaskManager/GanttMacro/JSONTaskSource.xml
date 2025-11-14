@@ -63,7 +63,7 @@
 ##
 #if ($xcontext.action == 'get')
   #set ($discard = $response.setContentType('application/json'))
-  #set ($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.fullName not like '%Template'" +
+  #set ($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.space &lt;&gt; 'TaskManager.TaskManagerTemplates'" +
     'and (task.startDate is not NULL or task.createDate is not NULL)')
   #if ("$!request.taskId" != '')
     ## Short-circuit if the request is for a specific task.

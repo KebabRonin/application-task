@@ -62,6 +62,7 @@ TaskManager.administration.addSeverity.submit=Add Priority
 TaskManager.adminitration.addProject=Add Project
 TaskManager.adminitration.addStatus=Add Status
 TaskManager.adminitration.addSeverity=Add Priority
+TaskManager.adminitration.templateList=Add Task Template
 
 # Class fields
 TaskManager.TaskManagerClass_name=Task
@@ -104,6 +105,18 @@ taskmanager.livetable._actions=Actions
 taskmanager.livetable._actions.edit=Edit
 taskmanager.livetable._actions.delete=Delete
 taskmanager.livetable.emptyvalue=-
+
+# Template list specific keys
+taskmanager.templateList.label=Name
+taskmanager.templateList.hint=The name of the new template
+taskmanager.templateList.button=Create new template
+taskmanager.templateList.livetable.taskName=Template task page
+taskmanager.templateList.livetable.providerName=Template provider name
+taskmanager.templateList.notification.inprogress=Creating template
+taskmanager.templateList.notification.done=Template created
+taskmanager.templateList.notification.fail=Could not create template
+taskmanager.templateList.notification.fail.conflict=Template already exists
+taskmanager.templateList.notification.fail.unauthorized=Unauthorized
 
 # Live table specific keys
 taskmanager.livetable.name=Task

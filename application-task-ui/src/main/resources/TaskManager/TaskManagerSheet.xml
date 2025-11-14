@@ -149,6 +149,10 @@
                   ## we are a non-terminal page: use space name
                   #set($taskName = $doc.documentReference.parent.name)
                 #end
+                #if ($taskName.endsWith('Template'))
+                  ## Don't set the title for templates.
+                  #set ($taskName = '')
+                #end
               #end
             :   &lt;input class="form-control" type="input" name="TaskManager.TaskManagerClass_0_name" id="TaskManager.TaskManagerClass_0_name" value="$!escapetool.xml($!services.rendering.escape($taskName, 'xwiki/2.1'))"/&gt;
           )))

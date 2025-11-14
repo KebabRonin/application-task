@@ -20,45 +20,66 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="TaskManager.TaskPagesSearch" locale="">
+<xwikidoc version="1.5" reference="TaskManager.TaskTemplateList" locale="">
   <web>TaskManager</web>
-  <name>TaskPagesSearch</name>
+  <name>TaskTemplateList</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>WebHome</parent>
+  <parent>TaskManager.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
-  <title>TaskPagesSearch</title>
+  <title>Create Task Template</title>
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{velocity output="false"}}
-#if($xcontext.action == 'get' &amp;&amp; "$!{request.outputSyntax}" == 'plain')
-  #set ($statement = "FROM doc.object(TaskManager.TaskManagerClass) AS taskObject WHERE doc.space &lt;&gt; 'TaskManager.TaskManagerTemplates' AND lower(doc.fullName) LIKE lower(:param)")
-  #set ($param = $services.query.parameter().anyChars().literal("$!request.text").anyChars())
-  #set ($query = $services.query.xwql($statement).addFilter('unique').addFilter('document').setLimit(10).bindValue('param', $param))
-  #set ($array = [])
-  #foreach ($taskReference in $query.execute())
-    #if ($services.security.authorization.hasAccess("view", $taskReference))
-      #set ($discard = $array.add({
-        'label': $taskReference.name,
-        'value': $services.model.serialize($taskReference, 'compactwiki'),
-        'hint':  $services.model.serialize($taskReference.parent, 'compactwiki')
-      }))
-    #end
-  #end
-  #jsonResponse($array)
-#end
+  <content>{{velocity}}
+#set ($discard = $xwiki.jsx.use('TaskManager.TaskTemplateList'))
+{{html}}
+&lt;form class='xform'&gt;
+  &lt;input name='outputSyntax' type='hidden' value='plain'&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for='templateName'&gt;$escapetool.xml($services.localization.render('taskmanager.templateList.label'))&lt;/label&gt;
+      &lt;span class='xHint'&gt;$escapetool.xml($services.localization.render('taskmanager.templateList.hint'))&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;&lt;input name='templateName' type='text' required&gt;&lt;/input&gt;&lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;button id='button-submit-template' class='btn btn-primary'&gt;$escapetool.xml($services.localization.render('taskmanager.templateList.button'))&lt;/button&gt;
+&lt;/form&gt;
+{{/html}}
+
+#set ($options = {
+  'tagCloud': true,
+  'className': 'XWiki.TemplateProviderClass',
+  'translationPrefix': 'taskmanager.livetable.',
+  'resultPage': 'TaskManager.TaskTemplateListLivetableResults',
+  'queryFilters': 'currentlanguage,unique'
+})
+#set ($liveDataConfig = {'meta': {'propertyDescriptors': [
+  {'id': 'name', 'name' : "$services.localization.render('taskmanager.templateList.livetable.providerName')",
+    'displayer': {'id': 'link', 'propertyHref': 'doc.url' }},
+  {'id': 'template', 'name': "$services.localization.render('taskmanager.templateList.livetable.taskName')" },
+  { 'id': '_actions', 'displayer': { 'id': 'actions', 'actions': ['delete'] }}
+]}})
+
+{{liveData
+    id="taskManagerTemplates"
+    properties="name,description,template,doc.date,doc.author,_actions"
+    source="liveTable"
+    sourceParameters="$services.rendering.escape($escapetool.url($options), 'xwiki/2.1')"
+    }}
+$jsontool.serialize($liveDataConfig)
+{{/liveData}}
 {{/velocity}}</content>
   <object>
-    <name>TaskManager.TaskPagesSearch</name>
+    <name>TaskManager.TaskTemplateList</name>
     <number>0</number>
     <className>XWiki.JavaScriptExtension</className>
-    <guid>40ced98a-838a-405e-b370-a1ce6aeb124b</guid>
+    <guid>9c7f0864-1432-4746-a23b-1827ae0b8761</guid>
     <class>
       <name>XWiki.JavaScriptExtension</name>
       <customClass/>
@@ -139,55 +160,59 @@
       </use>
     </class>
     <property>
-      <cache>long</cache>
+      <cache>forbid</cache>
     </property>
     <property>
-      <code>require.config({
-  paths: {
-    'xwiki-selectize': "$xwiki.getSkinFile('uicomponents/suggest/xwiki.selectize.js', true)" +
-      "?v=$escapetool.url($xwiki.version)"
-  }
+      <code>define('xwiki-task-template-list-notification-messages', {
+  prefix: 'taskmanager.templateList.notification.',
+  keys: [
+    'inprogress',
+    'done',
+    'fail',
+    'fail.conflict',
+    'fail.unauthorized',
+  ]
 });
-
-require(['jquery', 'xwiki-selectize'], function($) {
-  var searchServiceDocRef = XWiki.Model.resolve('TaskManager.TaskPagesSearch', XWiki.EntityType.DOCUMENT,
-    XWiki.currentDocument.getDocumentReference());
-  var searchServiceURL = new XWiki.Document(searchServiceDocRef).getURL('get', 'outputSyntax=plain');
-  var errorHandler = function(response, callback) {
-    console.log('Failed to get the JSON from [' + searchServiceURL + ']. Reason: ' + response.status + ' ' + response.statusText);
-    callback([]);
+require(['jquery', 'xwiki-l10n!xwiki-task-template-list-notification-messages'], function ($, l10n) {
+  var escapeHTML = function(text) {
+    let textHTMLEscape = new Element('span');
+    textHTMLEscape.textContent = text;
+    return textHTMLEscape.innerHTML;
   };
-  var settings = {
-    load: function(typedText, callback) {
-      $.getJSON(searchServiceURL, {
-        text: typedText
-      }).done(callback).fail(function (response) {
-        errorHandler(response, callback);
-      });
-    },
-    loadSelected: function(selectedValue, callback) {
-      $.getJSON(searchServiceURL, {
-        text: selectedValue,
-        exactMatch: true
-      }).done(callback).fail(function (response) {
-        errorHandler(response, callback);
+  $(document).on('click', '#button-submit-template', function (event) {
+    const endpointURL = new XWiki.Document(
+        XWiki.Model.resolve('TaskManager.CreateTaskTemplateEndpoint', XWiki.EntityType.DOCUMENT)
+    ).getURL('get');
+    event.preventDefault();
+    // Check that the template name is not empty.
+    if (event.target.parentElement.reportValidity()) {
+      let notification = new XWiki.widgets.Notification(escapeHTML(l10n.get('inprogress')), 'inprogress');
+      $.ajax(endpointURL, { data : event.target.parentElement.serialize() }).done((data) =&gt; {
+        notification.replace(new XWiki.widgets.Notification(escapeHTML(l10n.get('done')), 'done'));
+        document.location = new XWiki.Document(
+            XWiki.Model.resolve(data.templateDocument.reference, XWiki.EntityType.DOCUMENT)
+        ).getURL('edit');
+      }).fail((data) =&gt; {
+        let reason = l10n.get('fail');
+        if (data.status === 401) {
+            reason = l10n.get('fail.unauthorized');
+        } else if (data.status === 409) {
+            reason = l10n.get('fail.conflict');
+        }
+        notification.replace(new XWiki.widgets.Notification(escapeHTML(reason), 'error'));
       });
     }
-  };
-  $('.suggest-task-pages').xwikiSelectize(settings);
-  $(document).on('shown.bs.modal', '.modal', function () {
-    $('.suggest-task-pages').xwikiSelectize(settings);
-  });
+  })
 });</code>
     </property>
     <property>
       <name/>
     </property>
     <property>
-      <parse>1</parse>
+      <parse>0</parse>
     </property>
     <property>
-      <use>onDemand</use>
+      <use>currentPage</use>
     </property>
   </object>
 </xwikidoc>

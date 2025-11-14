@@ -20,14 +20,14 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.5" reference="TaskManager.TaskManagerTemplate" locale="">
-  <web>TaskManager</web>
+<xwikidoc version="1.5" reference="TaskManager.TaskManagerTemplates.TaskManagerTemplate" locale="">
+  <web>TaskManager.TaskManagerTemplates</web>
   <name>TaskManagerTemplate</name>
   <language/>
   <defaultLanguage/>
   <translation>0</translation>
   <creator>xwiki:XWiki.Admin</creator>
-  <parent>TaskManager.WebHome</parent>
+  <parent>TaskManager.TaskManagerTemplates</parent>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
   <version>1.1</version>
@@ -173,7 +173,7 @@
 
 {{html clean="false" wiki="true"}}
 #if($type == 'edit')
-  #set($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.fullName not like '%Template' and doc.fullName &lt;&gt; :fullName and task.project &lt;&gt; '' order by task.duedate")
+  #set($query = "from doc.object(TaskManager.TaskManagerClass) as task where doc.space &lt;&gt; 'TaskManager.TaskManagerTemplates' and doc.fullName &lt;&gt; :fullName and task.project &lt;&gt; '' order by task.duedate")
   #set($results = $services.query.xwql($query).bindValue('fullName', $doc.fullName).execute())
   #if($results.size() != 0)
     &lt;div id="TaskManager.TaskManagerClass_dependencies"&gt;

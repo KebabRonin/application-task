@@ -158,7 +158,7 @@ class DefaultTaskManagerTest
     {
         String queryStatement = ", BaseObject as taskObj, IntegerProperty as idProp "
             + "WHERE taskObj.name = doc.fullName "
-            + "AND doc.fullName != 'TaskManager.TaskManagerTemplate' "
+            + "AND doc.space != 'TaskManager.TaskManagerTemplates' "
             + "AND taskObj.className = 'TaskManager.TaskManagerClass' "
             + "AND taskObj.id = idProp.id.id AND idProp.id.name = 'number' "
             + "AND idProp.value = :id";

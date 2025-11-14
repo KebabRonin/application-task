@@ -39,7 +39,7 @@
   <content>{{include reference="XWiki.LiveTableResultsMacros" /}}
 {{velocity wiki="false"}}
 #set ($extraFrom = '')
-#set ($extraWhere = '')
+#set ($extraWhere = " and doc.space &lt;&gt; 'TaskManager.TaskManagerTemplates'")
 #set ($params = {})
 #set ($spaceWhere = '')
 #if ("$!request.tasktag" != '')

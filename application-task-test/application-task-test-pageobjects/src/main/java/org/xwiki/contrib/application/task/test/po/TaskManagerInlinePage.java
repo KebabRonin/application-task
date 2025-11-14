@@ -19,8 +19,11 @@
  */
 package org.xwiki.contrib.application.task.test.po;
 
-import org.openqa.selenium.Keys;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.Select;
@@ -66,6 +69,8 @@ public class TaskManagerInlinePage extends InlinePage
 
     @FindBy(id = CLASS_PREFIX + "progress")
     private WebElement progressElement;
+
+    private static final String DEPENDENCIES_ID = "TaskManager.TaskManagerClass_dependencies";
 
     /**
      * @param name the name of the Task entry
@@ -160,6 +165,14 @@ public class TaskManagerInlinePage extends InlinePage
     }
 
     /**
+     * @return the progress of the task entry
+     */
+    public String getProgress()
+    {
+        return this.progressElement.getAttribute("value");
+    }
+
+    /**
      * @param progress the progress for the task entry
      */
     public void setProgress(String progress)
@@ -179,5 +192,28 @@ public class TaskManagerInlinePage extends InlinePage
         input.click();
         WebElement select = getDriver().findElement(By.cssSelector(".selectize-dropdown-content > div"));
         select.click();
+    }
+
+    /**
+     * @return the name of the Task entry
+     */
+    public List<String> getDependencies()
+    {
+        List<WebElement> dependenciesElements = getUtil().getDriver()
+            .findElements(By.cssSelector("input[name='TaskManager.TaskManagerClass_0_dependencies']:not([value=''])"));
+        return dependenciesElements.stream().map(element -> assigneeElement.getAttribute("value"))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * @param dependencyPage the page reference of the task to depend on
+     */
+    public void setDependency(String dependencyPage)
+    {
+        List<WebElement> dependency = getUtil().getDriver().findElements(
+                By.cssSelector("input[name='TaskManager.TaskManagerClass_0_dependencies'][value='" + dependencyPage + "']"));
+        if (!dependency.isEmpty()) {
+            dependency.get(0).click();
+        }
     }
 }

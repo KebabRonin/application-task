@@ -42,6 +42,16 @@
   {{missingLicenseMessage extensionName="taskmanager.extension.name"/}}
 #else
 
+{{html}}
+&lt;a id="task-manager-view-task-list"
+    href="$escapetool.xml($xwiki.getDocument('TaskManager.TaskTemplateList').getURL())"
+    class="buttonwrapper"&gt;
+  &lt;button class='btn'&gt;
+    $escapetool.xml($services.localization.render('taskmanager.templateList.button'))
+  &lt;/button&gt;
+&lt;/a&gt;
+{{/html}}
+
 {{taskgantt readonly="false"/}}
 
 #set ($statusOptions = [{"value": "", "label": $services.localization.render('livedata.filter.list.emptyLabel')}])

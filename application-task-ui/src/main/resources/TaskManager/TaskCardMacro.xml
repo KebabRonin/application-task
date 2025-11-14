@@ -43,7 +43,7 @@
 * ##taskid## [mandatory] is the document name where the ##TaskManager.TaskManagerClass## object is
 * ##dependencies## [optional, default="true"] is for displaying the dependencies
 
-{{taskcard taskid="TaskManager.TaskManagerTemplate" dependencies="true" /}}
+{{taskcard taskid="TaskManager.TaskManagerTemplates.TaskManagerTemplate" dependencies="true" /}}
 </content>
   <object>
     <name>TaskManager.TaskCardMacro</name>
